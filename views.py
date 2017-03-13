@@ -1,138 +1,52 @@
-from django.shortcuts import render
-from django.views.generic.edit import CreateView
-from django.core.urlresolvers import reverse_lazy
-from django.http import HttpResponseRedirect
+from account.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.generic.list import ListView
-from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.shortcuts import render, HttpResponseRedirect
 
-from news.forms import NewsUpdateForm
-from news.models import News
-from custom_tags.templatetags.decorators import superuser_check
+from .forms import NewsCreateForm
+from .models import News
 
 
-# Create your views here.
-
-# @login_required
-# @user_passes_test(superuser_check)
-# def news_create(request):
-#     if request.method == 'POST':
-#         form = NewsUpdateForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             return HttpResponseRedirect(reverse('news-list'))
-#     else:
-#         form = NewsUpdateForm()
-#     return render(request, "news_create.html", {'form': form, })
-#
-#
-# def news_lsit(request, template='news_list.html'):
-#     context_dict = {
-#         "news_list": News.objects.all()[:15],
-#     }
-#     return render_to_response(template, RequestContext(request, context_dict))
-#
-#
-# def news_details(request, news_pk, template='news_details.html'):
-#     context_dict = {
-#         "news": News.objects.get(id=news_pk)
-#     }
-#     return render_to_response(template, RequestContext(request, context_dict))
+@login_required
+def create(request, news_id=None):
+    creation_form = NewsCreateForm()
+    if request.method == 'POST':
+        creation_form = NewsCreateForm(request.POST or None, request.FILES)
+        if creation_form.is_valid():
+            news = creation_form.save(commit=False)
+            news.publisher = request.user
+            news.save()
+            return HttpResponseRedirect(reverse('cartoview_news.list'))
+    return render(request, template_name='cartoview_news/create.html', context={'form': creation_form})
 
 
-class NewsList(ListView):
-    """
-    This view lists all the news
-    """
-    template_name = 'news_list.html'
-    model = News
-
-    def get_queryset(self):
-        return News.objects.all().order_by('-publish_date')[:15]
-
-    def get_context_data(self, *args, **kwargs):
-        context = super(ListView, self).get_context_data(*args, **kwargs)
-        context['latest_news_list'] = News.objects.all().order_by('-publish_date')[:5]
-        return context
+def list_news(request):
+    return render(request, template_name='cartoview_news/list.html',
+                  context={'news': News.objects.all().order_by('-date_created')})
 
 
-class NewsCreate(CreateView):
-    """
-    This view is for creating new news
-    """
-    template_name = 'news_create.html'
-    model = News
-    form_class = NewsUpdateForm
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super(NewsCreate, self).dispatch(request, *args, **kwargs)
-        if not self.request.user.is_superuser:
-            return HttpResponseRedirect(reverse('news-list'))
-        else:
-            return response
-
-    def form_valid(self, form):
-        self.object = form.save(commit=False)
-        self.object.publish_date = form.data['publish_date']
-        self.object.save()
-        return HttpResponseRedirect(self.get_success_url())
-
-    def get_success_url(self):
-        return reverse('news-details', kwargs={'news_pk': self.object.id})
+def details(request, news_id):
+    obj = News.objects.filter(id=news_id).first()
+    return render(request, template_name='cartoview_news/details.html', context={'obj': obj})
 
 
-class NewsUpdate(UpdateView):
-    """
-    This view is for updating an existing news
-    """
-    template_name = 'news_create.html'
-    model = News
-    form_class = NewsUpdateForm
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super(NewsUpdate, self).dispatch(request, *args, **kwargs)
-        if not self.request.user.is_superuser:
-            return HttpResponseRedirect(self.get_success_url())
-        else:
-            return response
-
-    def get_object(self):
-        return News.objects.get(pk=self.kwargs['news_pk'])
-
-    def get_success_url(self):
-        return reverse('news-details', kwargs={'news_pk': self.object.id})
+@login_required
+def edit(request, news_id=None):
+    obj = News.objects.filter(id=news_id).first()
+    creation_form = NewsCreateForm(instance=obj)
+    if request.method == 'POST':
+        creation_form = NewsCreateForm(request.POST or None, request.FILES, instance=obj)
+        if creation_form.is_valid():
+            news = creation_form.save()
+            return HttpResponseRedirect(reverse('cartoview_news.list'))
+    return render(request, template_name='cartoview_news/update.html', context={'form': creation_form})
 
 
-class NewsDelete(DeleteView):
-    """
-    This view is for deleting an existing news
-    """
-    template_name = 'news_delete.html'
-    model = News
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super(NewsDelete, self).dispatch(request, *args, **kwargs)
-        if not self.request.user.is_superuser:
-            return HttpResponseRedirect(self.get_success_url())
-        else:
-            return response
-
-    def get_success_url(self):
-        return reverse('news-list')
-
-    def get_object(self):
-        return News.objects.get(pk=self.kwargs['news_pk'])
-
-
-class NewsDetails(DetailView):
-    """
-    This view gives the details of a news
-    """
-    template_name = 'news_details.html'
-
-    def get_object(self):
-        return News.objects.get(pk=self.kwargs['news_pk'])
+@login_required
+def delete(request, news_id):
+    from django.conf import settings
+    print 'cartoview_news' in settings.INSTALLED_APPS
+    if request.method == 'POST':
+        News.objects.filter(id=news_id).delete()
+        return HttpResponseRedirect(reverse('cartoview_news.list'))
+    return render(request, template_name='cartoview_news/delete.html',
+                  context={'object': News.objects.filter(id=news_id).first()})

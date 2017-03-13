@@ -1,0 +1,33 @@
+{% extends "site_base.html" %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+{% block title %} {% trans "Add News" %} - {{ block.super }} {% endblock %}
+{% block extra_head %}
+
+    <style>
+        .controls > select, .controls > textarea, .controls > input, .controls > div {
+            width: 100%;
+        }
+    </style>
+{% endblock %}
+{% block body_outer %}
+    <div class="row">
+        <p>
+        <h3>Delete!</h3>
+        </p>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-6 col-lg-6">
+            <form method="post">
+                {% csrf_token %}
+                {% blocktrans %}WARNING! Are you sure you want to delete page {{ object }} from the database? This
+                    cannot be
+                    undone!{% endblocktrans %}
+                <br>
+                <br>
+                <a href="{% url "cartoview_news.list" %}" class="btn btn-default" value="">{% trans 'Cancel' %}</a>
+                <button class="btn btn-danger" type="submit" value="Delete banner">{% trans 'Delete!' %}</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

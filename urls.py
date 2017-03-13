@@ -1,18 +1,12 @@
 from django.conf.urls import patterns, url
-from django.views.generic import TemplateView
 
-from news.views import NewsList, NewsCreate, NewsUpdate, NewsDelete, NewsDetails
+from . import views, APP_NAME
 
-urlpatterns = patterns(
-    'news.views',
-    # url(r'^create$', 'news_create', name='news-create'),
-    # url(r'^list$', 'news_lsit', name='news-list'),
-    # url(r'^(?P<news_pk>[0-9]+)/details$', 'news_details', name='news-details'),
-    url(r'^list$', NewsList.as_view(), name='news-list'),
-    url(r'^create$', NewsCreate.as_view(), name='news-create'),
-    url(r'^(?P<news_pk>[0-9]+)/update$', NewsUpdate.as_view(), name='news-update'),
-    url(r'^(?P<news_pk>[0-9]+)/delete$', NewsDelete.as_view(), name='news-delete'),
-    url(r'^(?P<news_pk>[0-9]+)/details$', NewsDetails.as_view(), name='news-details'),
-    url(r'^news_templates/?$', TemplateView.as_view(template_name='news_templates.html'), name='news_templates'),
-
-)
+urlpatterns = patterns('',
+                       # app urls
+                       url(r'^new/$', views.create, name='%s.new' % APP_NAME),
+                       url(r'^list/$', views.list_news, name='%s.list' % APP_NAME),
+                       url(r'^read/(?P<news_id>\d+)$', views.details, name='%s.details' % APP_NAME),
+                       url(r'^update/(?P<news_id>\d+)$', views.edit, name='%s.edit' % APP_NAME),
+                       url(r'^delete/(?P<news_id>\d+)$', views.delete, name='%s.delete' % APP_NAME),
+                       )

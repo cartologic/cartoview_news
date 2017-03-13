@@ -1,0 +1,58 @@
+{% extends "site_base.html" %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+{% block title %} {% trans "Add News" %} - {{ block.super }} {% endblock %}
+{% block extra_head %}
+
+    <style>
+        .controls > select, .controls > textarea, .controls > input, .controls > div {
+            width: 100%;
+        }
+    </style>
+{% endblock %}
+{% block body_outer %}
+    <div class="row">
+        <p>
+        <h3>News</h3>
+        </p>
+    </div>
+    <div class="row">
+        <div class="col-md-8">
+            {% for obj in news %}
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div class="text-center">
+                            <div class="row">
+                                <div class="col-sm-9">
+                                    <h3 class="pull-left">{{ obj.title }}</h3>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6" style="text-align: left">
+                                    <h4>
+                                        <small><em>{{ obj.date_created|date:"D d-M-Y f A" }}</em></small>
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        {% if obj.image %}
+                            <a href="#" class="thumbnail">
+                                <img alt="Image" src="{{ obj.image.url }}">
+                            </a>
+                        {% endif %}
+
+                        {{ obj.description|slice:":200" }} <a href="{% url 'cartoview_news.details' news_id=obj.id %}">Read
+                        more</a>
+                    </div>
+
+                    <div class="panel-footer">
+                        <span class="label label-default">by : {{ obj.publisher.username }}</span>
+                    </div>
+                </div>
+                <hr>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
