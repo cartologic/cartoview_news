@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block title %} {% trans "Add News" %} - {{ block.super }} {% endblock %}
 {% block extra_head %}
-<link href="{{ STATIC_URL }}cartoview/css/custom.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}cartoview/css/custom.css" rel="stylesheet"/>
     <style>
         .controls > select, .controls > textarea, .controls > input, .controls > div {
             width: 100%;
@@ -23,6 +23,8 @@
                                 <div class="col-sm-3">
                                     <a style="margin-top: 10px" class="btn btn-danger"
                                        href="{% url 'cartoview_news.delete' news_id=obj.id %}">Delete</a>
+                                    <a style="margin-top: 10px" class="btn btn-default"
+                                       href="{% url 'cartoview_news.edit' news_id=obj.id %}">Edit</a>
                                 </div>
                             {% endif %}
 
